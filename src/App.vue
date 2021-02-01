@@ -4,8 +4,14 @@
   <li v-for="player in players" :key="player.id">
     {{ player.name }} - {{ player.score }} / {{ translateScore(player.score) }}
   </li>
-  <label v-if="isDeuce">Deuce !</label>
-  <label v-if="hasWinner">{{ winner }} has won !</label>
+  <label v-if="isDeuce"><b>Deuce !</b></label>
+  <label v-if="hasAdvantage != false"
+    >Advantage : <b>{{ hasAdvantage }}</b></label
+  >
+  <label v-if="hasWinner != false"
+    >Winner : <b>{{ hasWinner }}</b></label
+  >
+
   <!--<label v-if="isMaxPlayers">Le nombre de joueurs maximum est atteint.</label>-->
   <hr />
   <button v-if="!hasWinner" @click="gameOn">Game !</button>
@@ -23,14 +29,13 @@ export default {
   },
   setup() {
     let players = ref([]);
-    let winner = ref();
 
     const savePlayer = function (data) {
       if (isMaxPlayers.value) return;
       if (data == "") return;
       players.value = [
         ...players.value,
-        { name: data, id: Date.now(), score: 0 },
+        { name: data, id: Date.now(), score: 0, adv: false, win: false },
       ];
     };
 
@@ -51,18 +56,18 @@ export default {
 
     const hasAdvantage = computed(() => {
       if (
-        players.value.length > 0 &&
+        players.value.length == 2 &&
         players.value[0].score >= 4 &&
         players.value[0].score == players.value[1].score + 1
       ) {
-        return true;
+        return players.value[0].name;
       }
       if (
-        players.value.length > 0 &&
+        players.value.length == 2 &&
         players.value[1].score >= 4 &&
         players.value[1].score == players.value[0].score + 1
       ) {
-        return true;
+        return players.value[1].name;
       } else return false;
     });
 
@@ -72,19 +77,20 @@ export default {
         players.value[0].score >= 4 &&
         players.value[0].score >= players.value[1].score + 2
       ) {
-        winner = players.value[0].name;
-        return true;
+        return players.value[0].name;
       } else if (
         players.value.length >= 2 &&
         players.value[1].score >= 4 &&
         players.value[1].score >= players.value[0].score + 2
       ) {
-        winner = players.value[1].name;
-        return true;
+        return players.value[1].name;
       } else return false;
     });
 
     const gameOn = function () {
+      if (hasAdvantage.value) {
+        players.value[0].adv = players.value[1].adv = false;
+      }
       if (hasWinner.value) {
         players.value[0].score = players.value[1].score = 0;
       } else if (players.value.length == 2) {
@@ -109,7 +115,6 @@ export default {
       isMaxPlayers,
       translateScore,
       hasWinner,
-      winner,
       hasAdvantage,
     };
   },
